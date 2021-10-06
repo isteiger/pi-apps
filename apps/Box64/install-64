@@ -1,19 +1,10 @@
 #!/bin/bash
-
-DIRECTORY="$(dirname "$(dirname "$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )")")"
-
-function error {
-  echo -e "\\e[91m$1\\e[39m"
-  exit 1
-}
-
-"${DIRECTORY}/pkg-install" "cmake make python3 gcc libc6-dev g++ build-essential" "$(dirname "$0")" || exit 1
+install_packages cmake make python3 gcc libc6-dev g++ build-essential || exit 1
 
 rm -rf ~/box64
-git clone https://github.com/ptitSeb/box64 || error 'Failed to clone box64 repository!'
+git_clone https://github.com/ptitSeb/box64 || error 'Failed to clone box64 repository!'
 cd box64 || error 'Failed to change directory'
 mkdir build; cd build; cmake .. -DRPI4ARM64=1 -DCMAKE_BUILD_TYPE=RelWithDebInfo || error 'Failed to run cmake in "build" directory'
-
 #determine how many threads can run without running out of memory
 if [ $(($(free -bt | tail -1 | awk '{print $2}')-$(free -bt | tail -1 | awk '{print $3}'))) -le 2000000000 ];then
   #less than 2GB of available ram
@@ -34,5 +25,4 @@ if ! sudo systemctl restart systemd-binfmt ;then
   journalctl -xe | cat
   echo "Exiting this script as successful, but consider sending the above errors to Pi-Apps developers."
 fi
-
 exit 0

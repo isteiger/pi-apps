@@ -1,19 +1,10 @@
 #!/bin/bash
 
-DIRECTORY="$(dirname "$(dirname "$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )")")"
-
-function error {
-  echo -e "\\e[91m$1\\e[39m"
-  exit 1
-}
-
-if [ ! -f ~/hfs.exe ];then
-  wget https://www.rejetto.com/hfs/hfs.exe || error "Failed to download hfs.exe!"
-fi
+wget -O ~/hfs.exe https://www.rejetto.com/hfs/hfs.exe || exit 1
 
 "${DIRECTORY}/manage" install-if-not-installed 'Wine (x86)' || error "Wine is required to run HTTPS File Server but it failed to install!"
 
-echo "Creating menu button..."
+mkdir -p ~/.local/share/applications
 echo "[Desktop Entry]
 Type=Application
 Version=1.0

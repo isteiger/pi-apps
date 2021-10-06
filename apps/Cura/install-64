@@ -1,21 +1,11 @@
 #!/bin/bash
-
-DIRECTORY="$(dirname "$(dirname "$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )")")"
-
-function error {
-  echo -e "\\e[91m$1\\e[39m"
-  exit 1
-}
-
 wget -O ~/Cura.AppImage https://github.com/smartavionics/Cura/releases/download/20210908/Cura-mb-master-aarch64-20210908.AppImage || error "Failed to download!"
 
 chmod +x ~/Cura.AppImage
 
 #get stl-thumb package
-rm -f ~/stl-thumb_0.4.0_arm64.deb
-wget https://github.com/unlimitedbacon/stl-thumb/releases/download/v0.4.0/stl-thumb_0.4.0_arm64.deb
-"${DIRECTORY}/pkg-install" "$HOME/stl-thumb_0.4.0_arm64.deb" "$(dirname "$0")" || exit 1
-rm -f ~/stl-thumb_0.4.0_arm64.deb
+install_packages https://github.com/unlimitedbacon/stl-thumb/releases/download/v0.4.0/stl-thumb_0.4.0_arm64.deb || exit 1
+
 
 echo "[Desktop Entry]
 Name=Ultimaker Cura
@@ -29,4 +19,3 @@ MimeType=application/sla;application/vnd.ms-3mfdocument;application/prs.wavefron
 Categories=Graphics;Education;Development;Science;
 Keywords=3D;Printing;
 StartupNotify=true" > ~/.local/share/applications/cura.desktop || error "Failed to create menu button!"
-

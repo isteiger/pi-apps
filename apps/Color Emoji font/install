@@ -1,16 +1,8 @@
 #!/bin/bash
 
-DIRECTORY="$(dirname "$(dirname "$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )")")"
-
-function error {
-  echo -e "\\e[91m$1\\e[39m"
-  exit 1
-}
-
-cd $HOME
 rm -r ~/tmp &>/dev/null
 mkdir -p ~/tmp
-cd tmp || error "Failed to enter $HOME/tmp directory!"
+cd ~/tmp || error "Failed to enter $HOME/tmp directory!"
 wget https://fontsdata.com/zipdown-segoeuiemoji-132714.htm || error "Failed to download Segoe UI Emoji font!"
 wget https://noto-website.storage.googleapis.com/pkgs/NotoColorEmoji-unhinted.zip || error "Failed to download Noto Color Emoji font!"
 mv zipdown-segoeuiemoji-132714.htm segoeuiemoji.zip

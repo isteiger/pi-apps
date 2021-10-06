@@ -154,14 +154,8 @@ install() {
     DIRECTORY="'"$DIRECTORY"'"
     source "${DIRECTORY}/api"
     generate_logo
-    if "${DIRECTORY}/manage" multi-install "'"$app"'" ;then
-      echo -e "\nClosing in 30 seconds."
-      sleep 30
-    else
-      echo -e "\nClose this window to exit."
-      read enter #technically you could press Enter to exit.
-    fi
-    ' "$title"
+    "${DIRECTORY}/manage" multi-install "'"$app"'"
+    sleep 5' "$title"
   
   #re-preload all categories in background
   "${DIRECTORY}/etc/preload-daemon" "$format" &>/dev/null &
@@ -183,14 +177,8 @@ uninstall() {
     DIRECTORY="'"$DIRECTORY"'"
     source "${DIRECTORY}/api"
     generate_logo
-    if "${DIRECTORY}/manage" multi-uninstall "'"$app"'" ; then
-      echo -e "\nClosing in 30 seconds."
-      sleep 30
-    else
-      echo -e "\nClose this window to exit."
-      read enter #technically you could press Enter to exit.
-    fi
-    ' "$title"
+    "${DIRECTORY}/manage" multi-uninstall "'"$app"'"
+    sleep 5' "$title"
   
   #re-preload all categories in background
   "${DIRECTORY}/etc/preload-daemon" "$format" &>/dev/null &
@@ -253,9 +241,9 @@ while true;do
         "--button=!${DIRECTORY}/icons/info.png!Details:0" )
       fi
       
-      app="$(echo -e "$LIST" | yad --center --title='Pi-Apps'"$([ ! -z "$prefix" ] && echo ": $(echo "$prefix" | tr '/' '>')")" --width=310 --height=400 --no-headers \
+      app="$(echo -e "$LIST" | yad "${yadflags[@]}" --title='Pi-Apps'"$([ ! -z "$prefix" ] && echo ": $(echo "$prefix" | tr '/' '>')")" --width=310 --height=400 --no-headers \
         --text="$([ -z "$prefix" ] && echo "$motd" || echo "Viewing $(echo "$prefix" | tr '/' '>') category")" --image="${DIRECTORY}/icons/logo-64.png" --image-on-top \
-        --list --multiple --separator='\n' --window-icon="${DIRECTORY}/icons/logo.png" \
+        --list --multiple \
         --column=:IMG --column=:IMG --column=Name --column=Sysname:HD --column=tip:HD \
         --print-column=4 --tooltip-column=5 \
         "${buttons[@]}" \
@@ -453,28 +441,21 @@ $LIST"
         convert "$origicon" -resize 24x24 "${DIRECTORY}/apps/${app}/icon-24.png"
       fi
       
-      if [ -f "${DIRECTORY}/data/installed-packages/${app}" ] && [ ! -z "$(cat "${DIRECTORY}/data/installed-packages/${app}")" ];then
-        installedpackages="
-This app installed these packages: $(cat "${DIRECTORY}/data/installed-packages/${app}" | sort | uniq | tr '\n' ' ')"
-      else
-        installedpackages=''
-      fi
-      
       #text below the app icon
-      description="$(cat "${DIRECTORY}/apps/${app}/description" || echo 'Description unavailable')$installedpackages"
+      description="$(cat "${DIRECTORY}/apps/${app}/description" || echo 'Description unavailable')"
       
       #text to the right of the app icon
       abovetext="<b>$app</b>
 - Current status: $(echo "$(app_status "${app}")" | sed 's/corrupted/corrupted (installation failed)/g' | sed 's/disabled/disabled (installation is prevented on your system)/g')"
       if [ -f "${DIRECTORY}/apps/${app}/website" ];then
         #show website if it exists
+        website="$(cat "${DIRECTORY}/apps/${app}/website" | head -n1)"
         abovetext="$abovetext
-- Website: <a href="\""$(cat "${DIRECTORY}/apps/${app}/website" | head -n1)"\"">$(cat "${DIRECTORY}/apps/${app}/website" | head -n1)</a>"
+- Website: <a href="\""$website"\"">$website</a>"
         
       fi
       
       if [ -z "$clicklist" ];then
-        source "${DIRECTORY}/api"
         clicklist="$(usercount)"
       fi
       
@@ -487,7 +468,7 @@ This app installed these packages: $(cat "${DIRECTORY}/data/installed-packages/$
           #if a lot of users, add an exclamation point!
           abovetext="${abovetext}!"
         elif [ "$usercount" -ge 10000 ];then
-          #if a crazy number of users, add two exclamation points!
+          #if a crazy number of users, add two exclamation points!!
           abovetext="${abovetext}!!"
         fi
       fi
@@ -495,18 +476,19 @@ This app installed these packages: $(cat "${DIRECTORY}/data/installed-packages/$
       #array holding various buttons that may be passed to yad
       whichbutton=()
       
+      #display "Scripts" button if the app contains scripts
       if [ -f "${DIRECTORY}/apps/$app/uninstall" ] || [ -f "${DIRECTORY}/apps/$app/install" ] || [ -f "${DIRECTORY}/apps/$app/install-$arch" ];then
         whichbutton+=("--button=Scripts!${DIRECTORY}/icons/shellscript.png!Feel free to see how an app is installed!"$'\n'"Perfect for learning or troubleshooting.:6")
       fi
+      #Display "Edit" app button if enabled in settings
       if [ "$(cat "${DIRECTORY}/data/settings/Show Edit button")" == 'Yes' ];then
-        #if edit button enabled, show it
         whichbutton+=("--button=Edit!${DIRECTORY}/icons/edit.png!Make changes to the app:8")
       fi
+      #Display "Credits" button if the app has a credits file
       if [ -f "${DIRECTORY}/apps/${app}/credits" ];then
-        #if credits file exists, display credits button
         whichbutton+=("--button=Credits!!See who made the app and who put it on Pi-Apps:10")
       fi
-      #display buttons based on app's status file
+      #Display install/uninstall button(s)
       if [ "$(app_status "${app}")" == 'installed' ];then
         #if installed, display uninstall button
         whichbutton+=("--button=!${DIRECTORY}/icons/uninstall.png:2")
@@ -514,12 +496,12 @@ This app installed these packages: $(cat "${DIRECTORY}/data/installed-packages/$
         #if uninstalled, display install button
         whichbutton+=("--button=!${DIRECTORY}/icons/install.png:4")
       elif [ "$(app_status "${app}")" == 'disabled' ];then
-        #if disabled, display no buttons
+        #if disabled, display neither button, but an "Enable" button
         whichbutton+=("--button=<b>Enable</b>!!Force this app to install on your system."$'\n'"This app was disabled for a reason so if you enable it..."$'\n'"YOU HAVE BEEN WARNED.:12")
       else
-        #if app status is 'corrupted', and a log file exists for this app, then display a button to view the log file
+        #Display a "Errors" button if the app is 'corrupted' and has a logfile
         if [ "$(app_status "${app}")" == 'corrupted' ];then
-          logfile="$(ls "$DIRECTORY/logs"/* -t | grep "fail-${app}" | head -n1)"
+          logfile="$(get_logfile "$app")"
           if [ ! -z "$logfile" ];then
             whichbutton+=("--button=Errors!${DIRECTORY}/icons/log-file.png!$app failed to $(echo "$(basename "$logfile")" | awk -F'-' '{print $1}'). Click this button to view the error output saved in the log file.:14")
           fi
@@ -531,9 +513,9 @@ This app installed these packages: $(cat "${DIRECTORY}/data/installed-packages/$
       #kill the splash screen
       (sleep 1; kill "$splashpid" 2>/dev/null) &
       
-      echo "$description" | yad --text-info --fontname=12 --wrap --show-uri --text="$(echo "$abovetext" | sed 's/&/&amp;/g')" \
+      echo "$description" | yad "${yadflags[@]}" --text-info --fontname=12 --wrap --show-uri --text="$(echo "$abovetext" | sed 's/&/&amp;/g')" \
         --image="${DIRECTORY}/apps/${app}/icon-64.png" --image-on-top \
-        --title="Details of ${app}" --window-icon="${DIRECTORY}/icons/logo.png" --center --width=700 --height=300 \
+        --title="Details of ${app}" --width=700 --height=300 \
         --button=Back!"${DIRECTORY}/icons/back.png":0 \
         "${whichbutton[@]}"
       button=$? #get exit code to determine which button was pressed
@@ -637,9 +619,9 @@ This app installed these packages: $(cat "${DIRECTORY}/data/installed-packages/$
     action="$prevaction" #return to previous action
     
   elif [ "$action" == credits ];then
-    cat "${DIRECTORY}/apps/${app}/credits" | yad --text-info --fontname=12 --wrap \
+    cat "${DIRECTORY}/apps/${app}/credits" | yad "${yadflags[@]}" --text-info --fontname=12 --wrap \
       --image="${DIRECTORY}/apps/${app}/icon-64.png" --image-on-top \
-      --title="Credits of ${app}" --window-icon="${DIRECTORY}/icons/logo.png" --center --width=700 --height=300 \
+      --title="Credits of ${app}" --width=700 --height=300 \
       --button=Close!"${DIRECTORY}/icons/exit.png":0
     
     action="$prevaction" #return to previous action
@@ -660,8 +642,7 @@ This app installed these packages: $(cat "${DIRECTORY}/data/installed-packages/$
     action="$prevaction" #return to previous action
     
   elif [ "$action" == mind-reading ];then
-    yad --center --title='Pi-Apps' --width=310 \
-      --window-icon="${DIRECTORY}/icons/logo.png" \
+    yad "${yadflags[@]}" --title='Pi-Apps' --width=310 \
       --image="${DIRECTORY}/icons/mind-reading.png" \
       --text="Mind reading is not supported.
 (You didn't select an App)" \

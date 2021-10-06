@@ -1,0 +1,16 @@
+#!/bin/bash
+
+for_all_files() {
+  find /home/pi/pi-apps-2/apps -type f \( -name install -o -name install-32 -o -name install-64 -o -name uninstall \) -print0 | xargs -0 "$@"
+}
+
+for_all_files sed -i 's+"${DIRECTORY}/pkg-install" "+install_packages +g'
+for_all_files sed -i 's+"${DIRECTORY}/pkg-install" +install_packages +g'
+for_all_files sed -i 's+" "$(dirname "$0")"++g'
+for_all_files sed -i 's+ "$(dirname "$0")"++g'
+for_all_files sed -i 's+"${DIRECTORY}/purge-installed" "$(dirname "$0")"+purge_packages+g'
+for_all_files sed -i '/^DIRECTORY=.*/d'
+for_all_files sed -i '/function error {/,+3d'
+for_all_files sed -i 's+git clone+git_clone+g'
+for_all_files sed -i '/./b' -e :n -e 'N;s/\n$//;tn'
+for_all_files sed -i 's+#if your app installs any packages, keep this command here so those packages will be removed.++g'

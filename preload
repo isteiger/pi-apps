@@ -145,7 +145,7 @@ $DIRS"
   for i in $APPS
   do
     #if install script doesn't exist -------------------- and if os-specific install script doesn't exist, then...
-    if [ ! -f "${DIRECTORY}/apps/${i}/install" ] && [ ! -f "${DIRECTORY}/apps/${i}/install-${arch}" ];then
+    if [ ! -f "${DIRECTORY}/apps/${i}/packages" ] && [ ! -f "${DIRECTORY}/apps/${i}/install" ] && [ ! -f "${DIRECTORY}/apps/${i}/install-${arch}" ];then
       #...remove the app from the list
       echo "Removing $i from the list because it is not compatible with your ${arch}-bit OS." 1>&2
       APPS="$(echo "$APPS" | grep -vx "$i")"

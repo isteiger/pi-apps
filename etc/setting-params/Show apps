@@ -1,0 +1,4 @@
+#There are now two types of apps: 'standard' and 'package'.\nStandard apps use scripts to install 3rd-party programs. Package apps install a package using apt.\nYou may want to only see apps that can't be installed from APT, or you may only want apps that are installable from apt.
+standard and package
+standard
+package

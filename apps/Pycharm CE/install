@@ -1,19 +1,10 @@
 #!/bin/bash
-
-DIRECTORY="$(dirname "$(dirname "$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )")")"
-
-function error {
-  echo -e "\\e[91m$1\\e[39m"
-  exit 1
-}
-
 #Defining Variables
-downloadlink=https://download.jetbrains.com/python/pycharm-community-2021.2.2.tar.gz
+downloadlink=https://download-cf.jetbrains.com/python/pycharm-community-2021.2.1.tar.gz
 name=pycharm-community
 
 # Get dependencies
-"${DIRECTORY}/pkg-install" "python3-pip openjdk-11-jdk gcc" "$(dirname "$0")" || exit 1
-
+install_packages python3-pip openjdk-11-jdk gcc || exit 1
 echo "Downloading $(basename "$downloadlink")"
 rm -f $name.tar.gz
 wget $downloadlink -O $name.tar.gz || error "Failed to download $(basename "$downloadlink")"
@@ -24,13 +15,11 @@ sudo mkdir -p /opt/$name
 sudo tar xvzf $name.tar.gz -C /opt/$name || error "Failed to extract $name.tar.gz"
 rm -f $name.tar.gz
 sudo mv /opt/$name/*/* /opt/$name/
-
 echo "Making file executable"
 sudo chmod +x /opt/$name/bin/pycharm.sh
-
 echo "Implementing terminal fix"
 rm -rf ~/pty4j
-git clone https://github.com/JetBrains/pty4j.git ~/pty4j || error "Failed to download pty4j repository"
+git_clone https://github.com/JetBrains/pty4j.git ~/pty4j || error "Failed to download pty4j repository"
 cd ~/pty4j/native
 gcc -fPIC -c *.c || error "command failed: gcc -fPIC -c *.c"
 gcc -shared -o libpty.so *.o || error "command failed: gcc -shared -o libpty.so *.o"
@@ -38,7 +27,6 @@ sudo mkdir -p /opt/$name/lib/pty4j-native/linux/arm || error "Failed to make dir
 sudo cp libpty.so /opt/$name/lib/pty4j-native/linux/arm || error "Failed to copy $(pwd)/libpty.so to /opt/$name/lib/pty4j-native/linux/arm"
 rm -rf ~/pty4j
 cd ~/
-
 echo "Creating desktop shortcut"
 echo "[Desktop Entry]
 Type=Application

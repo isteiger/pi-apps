@@ -1,19 +1,10 @@
 #!/bin/bash
-
-DIRECTORY="$(dirname "$(dirname "$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )")")"
-
-function error {
-  echo -e "\\e[91m$1\\e[39m"
-  exit 1
-}
-
 #Run modified setupMC.sh
 rm -rf ~/Minecraft || sudo rm -rf ~/Minecraft || error "Failed to first remove ~/Minecraft folder!"
 mkdir -p ~/Minecraft && cd ~/Minecraft && wget https://github.com/chunky-milk/Minecraft/raw/main/setupMC.sh && chmod +x setupMC.sh && ./setupMC.sh || error 'Failed to install the launcher!'
 
 #Move launcher to /usr/share/
 sudo mkdir /usr/share/minecraftjava && sudo mv launcher.jar /usr/share/minecraftjava/launcher.jar
-
 #Create desktop shortcut
 cd ~/.local/share/applications/
 echo "[Desktop Entry]
@@ -26,7 +17,6 @@ Exec=env MESA_GL_VERSION_OVERRIDE=3.3 java -jar /usr/share/minecraftjava/launche
 Categories=Game;" > minecraft.desktop
 chmod +x minecraft.desktop
 cd
-
 mkdir -p ~/.minecraft
 echo -e '{
   "profiles": {
@@ -45,7 +35,6 @@ echo -e '{
     "profilesFormat": 1
   }
 }' > $HOME/.minecraft/launcher_profiles.json
-
 sudo rm -rf ~/Minecraft
 
 echo 'Installation is now done! You can open the launcher by going to Menu > Games > Minecraft Launcher'

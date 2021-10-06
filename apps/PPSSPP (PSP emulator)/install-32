@@ -1,14 +1,6 @@
 #!/bin/bash
-
-DIRECTORY="$(dirname "$(dirname "$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )")")"
-
-function error {
-  echo -e "\\e[91m$1\\e[39m"
-  exit 1
-}
-
 # Get dependencies
-"${DIRECTORY}/pkg-install" "build-essential cmake libgl1-mesa-dev libsdl2-dev libvulkan-dev wget unzip" "$(dirname "$0")" || exit 1
+install_packages build-essential cmake libgl1-mesa-dev libsdl2-dev libvulkan-dev wget unzip || exit 1
 cd ~/
 rm -f ppsspp_1.11.3_armv7l.zip
 wget https://github.com/chunky-milk/ppsspp-rpi/releases/download/v1.11.3/ppsspp_1.11.3_armv7l.zip || error "Failed to download zip!"

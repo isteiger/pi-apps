@@ -10,18 +10,9 @@ if [ -z "$file" ];then
 fi
 echo "$file" > "$DIRECTORY/data/current-viewed-logfile"
 
-if command -v mousepad ;then
-  mousepad "$file" &
-  pid=$!
-elif command -v leafpad ;then
-  leafpad "$file" &
-  pid=$!
-else
-  #for text_editor function
-  source "${DIRECTORY}/api"
-  text_editor "$file" &
-  pid=$!
-fi
+source "${DIRECTORY}/api"
+view_file "$file"
+pid=$!
 
 #while the user-selection stays the same, AND the text editor is still running, wait.
 while [ "$(cat "$DIRECTORY/data/current-viewed-logfile")" == "$file" ] && kill -0 $pid;do
